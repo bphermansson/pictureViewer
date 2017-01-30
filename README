@@ -1,0 +1,11 @@
+The main purpose of this project is to show pictures on a TV. It also shows some other interresting data. 
+In the top left it shows the date when the photo was taken, if its available in the Exif data. To the right it shows 
+the current time and data from Emoncms temperature/humidity sensors. Below this is an agenda with data 
+from Google Calendar. Finally, at the bottom, it shows metrological data from swedish weather institute Smhi. 
+The main file is showpics.html. In this file we call php files who collects data, and also javascript/Jquery code to
+collect data from various sources. 
+pics.php is the script that get the photos. The content in a dir is listed, and a random image is selected. The script 
+also collects som Exif data from the file. All this is then returned as Json. 
+smhidata.php. This script collects weather data from a nearby weather station. We find info about the current weather, 
+upcoming weather and more. Weather codes are stored in codes.json.
+
