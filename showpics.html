@@ -1,0 +1,303 @@
+<html>
+	<head>	
+		<link rel="stylesheet" type="text/css" href="main.css">
+		<title>My Google Photos</title>
+		<script type = "text/javascript" src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+		<script type = "text/javascript" language = "javascript">
+  
+	$(document).ready(function() {
+		//Get actual screen size
+		var screenwidth = screen.width;
+		var screenheight = screen.height;
+		console.log("Screen W: "+screenwidth + ". Screen H: " + screenheight);
+		
+		// Set bottom div at bottom of screen
+		var bottomheight = $("#bottom").height();
+		var bottompos = screenheight - bottomheight;
+		console.log(bottomheight + "-" + bottompos);
+		document.getElementById("bottom").style.top = bottompos;
+		
+		//Set info div to the right of the screen
+		// Get info div width
+		var infowidth = $("#info").width();
+		//console.log("infowidth: "+infowidth);
+		var infopos = screenwidth - infowidth - 20 + "px";
+		document.getElementById("info").style.left = infopos;
+		
+		// Intervall between reloading picures, in millis. 
+		var interval = 30000;
+		// Interval for some data retrievals . Dont check weather data, calendar at every picture change. 
+		var smhiinterval = 20;
+		var smhicheck=0;
+		
+		// For calendar events
+		var event;
+		var startarray;
+		
+		var bottomhtml;	// Stores data for the bottom div
+		var bottom2html;
+		
+		// Start main function
+		getData();
+		
+		function getData() {     
+			console.log('getData called');
+			var d = new Date();
+			var n = d.getTime();
+			var event;
+			var startarray;
+			
+			console.log("time: " + n);
+			
+			// Set timeout for get request
+			$.ajaxSetup({
+				timeout:10000 // in milliseconds 
+			});
+			
+/* Load picture */
+			// Call php script to fetch a random image
+			console.log("Get pic");
+			$.get( "pics.php", function( data ) {
+  				//console.log( "Data Loaded: " + data );
+  				var mydata = $.parseJSON(data);
+				var path = mydata.path;
+				var filename = mydata.filename;
+				var filedate = mydata.date;
+				var filetime = mydata.time;
+				var ratio = mydata.ratio;
+				var rotation = mydata.rotation;
+				// Rotation 3 is upside down
+				// 6 is rotated 1/4 ccw
+				var windspeed;
+				var winddir;
+				var winddirtext;
+				var d = new Date();
+				var n = d.getTime();
+				
+				console.log( "Data Loaded: " + filename +"-"+ rotation);
+				console.log("time2: " + n);
+				
+				// Set image in image div to the fetched image
+            			$("#photodiv").html("<img id='img' src='"+path+"/"+filename+"'>");
+				var imgObj=document.getElementById("img");
+				console.log( "Data Loaded: " + filename +"-"+ ratio);
+
+				var d = new Date();
+				var n = d.getTime();
+				console.log("time3: " + n);
+				var picwidth=0;
+				// Code to run when picture is loaded
+				imgObj.onload = function() {
+					picwidth=this.width;
+					console.log("Image loaded, width: " + picwidth); 
+					if (ratio>1) {
+						console.log("Ratio>1");
+						imgObj.height=screenheight;
+						//imgObj.margin="auto";
+						var middle = screenwidth/2;	// Screen width / 2
+						var picwidth = imgObj.clientWidth;	// Image width / 2   --- Width blir 0?
+						var pichalf = Math.round(picwidth/2);
+						var picleft = middle-pichalf;
+						imgObj.left = picleft;
+						document.getElementById("photodiv").style.left = picleft;
+						document.getElementById("photodiv").style.width = picwidth+"px";
+						imgObj.width=picwidth;
+
+						
+						console.log("middle-pichalf: " + picleft); 
+						console.log("Middle " + middle); 
+						console.log("Image width:3 " + picwidth); 
+						console.log("Screen width:  " + screenwidth); 
+						console.log("Image left: " + picleft); 
+							/*
+						
+*/
+
+					}
+					else {
+						console.log("Ratio<1");
+
+					}
+					if (rotation==6) {
+						console.log("Need to rotate");
+					}
+					
+				}
+				
+				// If ratio is > 1 then its portrait format
+				// Set the picture to fill the entire height...
+				if (ratio>1) {
+
+				}
+				else {
+					// ..or width
+					imgObj.width=screenwidth;
+					
+					var bottomObj=document.getElementById("bottom");
+					console.log("img height: " + imgObj.height)
+					//imgObj.width='100%';
+					//console.log("ratio<1");
+				}
+				// Set the photoinfo div's content to the image date and time
+				$("#photoinfo").html(filedate + " (" + rotation+")");
+				// Resize info div size
+				var infodivsize = window.getComputedStyle(document.getElementById('photoinfo')).width;
+				var photodiv=document.getElementById("photoinfo");
+				photodiv.width=infodivsize; 
+
+				setTimeout(getData, interval)
+			});
+			// Call php script to get data from Emoncms.org
+			console.log("Get Emoncms values");
+
+/* Emoncms */
+			$.get( "emoncms.php", function( data ) {
+				console.log( "Data Loaded from Emoncms: " + data );
+				var mydata = $.parseJSON(data);
+				var outdoortemp = mydata.outdoortemp;
+				var pressure = mydata.pressure;
+				var washertemp = mydata.washertemp;
+				var washerhum = mydata.washerhum;
+				var timenow = mydata.timenow;
+				// Round temp value
+				outdoortemp = outdoortemp * 10;
+				outdoortemp = Math.round(outdoortemp)/10;
+				
+				// Show fetched data
+				//$("#info").html("Klockan är:<br>" + timenow + " <br>Temperatur: "+ outdoortemp);
+				$("#irow1").html(timenow );
+				$("#irow2").html("Ute: "+ outdoortemp + "C");
+				$("#irow4").html("Tvättstuga: " + washertemp + "C, " + washerhum + "%");
+				$("#irow3").html("Lufttryck: "+pressure + "hPa");
+
+				// Resize info div size
+				//window.getComputedStyle(document.getElementById('your-element')).width;
+			});
+			
+/* Load weather data from Smhi. Use a counter, dont retrieve data on every picture change */
+
+			//console.log("smhicheck:"+smhicheck);
+			if (smhicheck>smhiinterval || smhicheck==0) {
+				console.log("Get Smhi data");
+				$.get( "smhidata.php", function( data ) {
+					console.log( "Data Loaded from Smhi: " + data );
+
+					var mydata = $.parseJSON(data);
+					windspeed=mydata.windspeed;
+					winddir=mydata.winddir;
+					rain=mydata.rain;
+					wnowtext = mydata.wnowtext;
+					moist = mydata.moist;
+					
+					if (winddir < 45 || winddir > 315) {
+						winddirtext = "nordlig";
+					}
+					else if (winddir > 45 || winddir > 135) {
+						winddirtext = "östlig";
+					}
+					else if (winddir <= 135||winddir >= 225) {
+						winddirtext = "sydlig";
+					}
+					else if (winddir < 225 || winddir > 315) {
+						winddirtext = "västlig";
+					}
+					// Add data to bottom div
+					bottomhtml = "Vind: " + windspeed + " m/s "+ winddirtext + ". Regn:  " + rain +". " + wnowtext;
+					console.log("bottom: " + bottomhtml);
+					// Add moist value to right panel
+					$("#irowMoist").html("Luftfuktighet: " + moist + "% ")
+
+				});
+				smhicheck=0;
+				
+// Get data from Google Calendar */
+				console.log("Get calendar data");
+				$.get( "googleCal.php", function( data ) {
+				//console.log( "Data Loaded from Google Calendar: " + data );
+				var mydata = $.parseJSON(data);
+				var inforowdata="";
+
+				Object.keys(mydata).forEach(function(key,index) {
+				// Runs one time per event found
+					//console.log(key);
+					//console.log(mydata[key]);
+					$event=mydata[key];
+					//console.log($event["start"]);
+					//console.log($event["end"]);
+					//console.log($event["event"]);
+					
+					var starttime = new Date($event["start"]);
+					var endtime = new Date($event["end"]);
+					var event = $event["event"];
+					var weekday = $event["day"];
+					// Get and adjust values
+					starthour = ("0" + (starttime.getHours())).slice(-2); // Leading zero      
+					startmin = ("0" + (starttime.getMinutes())).slice(-2); // Leading zero  
+					startHM = starthour + ":" + startmin;
+					startMonth = starttime.getMonth()+1;	// getMonth gives number from 0-11
+					startMonth = ("0" + (startMonth)).slice(-2); // Leading zero  
+					startdate = starttime.getFullYear()+"-"+startMonth+"-"+starttime.getDate();
+					endhour = ("0" + (endtime.getHours())).slice(-2); // Leading zero      
+					endmin = ("0" + (endtime.getMinutes())).slice(-2); // Leading zero  
+					endHM = endhour + ":" + endmin;
+					// Add data to right panel
+					inforowdata = inforowdata + weekday + "<br>" + startdate + " " + startHM + "-" + endHM + "<br>" + event + "<br>-------------------<br>";
+					
+				});
+				console.log(inforowdata);
+				// Infodivs to the right
+				$("#irow5").html(inforowdata);
+				});
+				
+// Weather forecast */
+				console.log("Get forecast data");
+				$.get( "forecast.php", function( data ) {
+					console.log( "Forecast loaded: " + data );
+					var mydata = $.parseJSON(data);
+					console.log( "Forecast loaded: " + mydata );
+					// Loop through array
+					bottom2html = "--- ";
+					Object.keys(mydata).forEach(function(key,index) {
+						//console.log(key);
+						var ctime = mydata[key]["ctime"];
+						var t = mydata[key]["t"];
+						var wd = mydata[key]["wd"];
+						var ws = mydata[key]["ws"];
+						var wtype = mydata[key]["wtype"];
+						// Add data to second bottom div
+						bottom2html = bottom2html + "kl: " + ctime + ".00: " + t + "C, " + wtype + " --- ";								
+					});
+				});
+			}
+			
+			// Add to counter
+			smhicheck++;
+			$("#bottom").html(bottomhtml);
+			$("#bottom2").html(bottom2html);
+
+		}
+		setTimeout(getData, interval)
+	});
+      </script>
+   </head>
+   <body>
+	<div id="container">
+		<div id="photoinfo"></div>
+		<div id="info">
+			<div id="irow1"></div>
+			<div id="irow2"></div>
+			<div id="irow3"></div>
+			<div id="irowMoist"></div>
+			<div id="emptyrow">&nbsp</div>
+			<div id="irow4"></div>
+			<div id="emptyrow">&nbsp</div>
+			<div id="irow5"></div>
+		</div>
+		<div id = "photodiv">
+		Wait...
+		</div>
+	</div>
+	<div id="bottom"></div>
+	<div id="bottom2">Bottom2	</div>
+   </body>
+</html>
