@@ -21,7 +21,7 @@ if(false === ($pressure = file_get_contents("http://emoncms.org/feed/value.json?
 else {
 	$pressure = str_replace('"', '', $pressure);
 }
-
+/*
 if(false === ($washertemp = file_get_contents("http://emoncms.org/feed/value.json?apikey=8133697b1b562f52689bd680b330cb4d&id=153900"))){
 	$washertemp="Washer temp error";
 }
@@ -34,7 +34,7 @@ if(false === ($washerhum = file_get_contents("http://emoncms.org/feed/value.json
 else {
 	$washerhum = str_replace('"', '', $washerhum);
 }	
-	
+*/	
 	
 // Current time
 $timenow = date('H:i');
