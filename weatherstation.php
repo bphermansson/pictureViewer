@@ -1,8 +1,8 @@
 <?php 
 // Get data from Home Assistant / Weather station
-$hassip = "192.168.1.142";
+$hassip = "192.168.1.190";
 
-if(false === ($wdatain = file_get_contents("http://".$hassip.":8123/api/states/sensor.vind_medel"))){
+if(false === ($wdatain = file_get_contents("http://".$hassip.":8123/api/states/sensor.winsp"))){
 	// Error
 	$windspeed="Outdoor wind error";
 }
@@ -13,7 +13,7 @@ else {
         $windspeed = $wdata->state; 
         $updated = $wdata->last_updated;
 } 
-if(false === ($wdatain = file_get_contents("http://".$hassip.":8123/api/states/sensor.vind_momentan"))){
+if(false === ($wdatain = file_get_contents("http://".$hassip.":8123/api/states/sensor.wings"))){
 	// Error
 	$windspeed="Outdoor wind mom error";
 }
@@ -25,7 +25,7 @@ else {
         $updated = $wdata->last_updated;
 } 	
 // 
-if(false === ($wdatain = file_get_contents("http://".$hassip.":8123/api/states/sensor.luftfukt_uthus"))){
+if(false === ($wdatain = file_get_contents("http://".$hassip.":8123/api/states/sensor.humidity_weather_station"))){
 	// Error
 	$moist="Moist error";
 }
@@ -40,7 +40,7 @@ else {
 // sensor.vindm_batt
 // sensor.windir
 
-if(false === ($wdatain = file_get_contents("http://".$hassip.":8123/api/states/sensor.temp_ute_uthus"))){
+if(false === ($wdatain = file_get_contents("http://".$hassip.":8123/api/states/sensor.temp_out_weather_station"))){
 	// Error
 	$temp="Temp error";
 }
@@ -51,7 +51,7 @@ else {
         $updated = $wdata->last_updated;
 }
 
-if(false === ($wdatain = file_get_contents("http://".$hassip.":8123/api/states/sensor.vindm_batt"))){
+if(false === ($wdatain = file_get_contents("http://".$hassip.":8123/api/states/sensor.battwsoutdoor"))){
 	// Error
 	$batt="Battery error";
 }
@@ -61,7 +61,7 @@ else {
         $batt = $wdata->state; 
         $updated = $wdata->last_updated;
 }
-if(false === ($wdatain = file_get_contents("http://".$hassip.":8123/api/states/sensor.windir"))){
+if(false === ($wdatain = file_get_contents("http://".$hassip.":8123/api/states/sensor.winddir"))){
 	// Error
 	$winddir="Winddir error";
 }

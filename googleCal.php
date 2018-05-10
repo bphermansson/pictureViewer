@@ -21,10 +21,12 @@ function getClient() {
   $client->setScopes(SCOPES);
   $client->setAuthConfig(CLIENT_SECRET_PATH);
   $client->setAccessType('offline');
+  
+//echo("Ok");
 
   // Load previously authorized credentials from a file.
   $credentialsPath = expandHomeDirectory(CREDENTIALS_PATH);
-  $credentialsPath = "/media/usbminne/calendar-php-quickstart.json";
+  //$credentialsPath = "/media/usbminne/calendar-php-quickstart.json";
   //echo $credentialsPath;
   if (file_exists($credentialsPath)) {
     //echo $credentialsPath;
@@ -92,6 +94,31 @@ while(true) {
   }
 }
 */
+/*
+THIS WORKS:
+// Print the next 10 events on the user's calendar.
+$calendarId = 'primary';
+$optParams = array(
+  'maxResults' => 10,
+  'orderBy' => 'startTime',
+  'singleEvents' => TRUE,
+  'timeMin' => date('c'),
+);
+$results = $service->events->listEvents($calendarId, $optParams);
+
+if (count($results->getItems()) == 0) {
+  print "No upcoming events found.\n";
+} else {
+  print "Upcoming events:\n";
+  foreach ($results->getItems() as $event) {
+    $start = $event->start->dateTime;
+    if (empty($start)) {
+      $start = $event->start->date;
+    }
+    printf("%s (%s)\n", $event->getSummary(), $start);
+  }
+}
+*/
 
 // Check all calendars
 // Set id for the calendars to show
@@ -105,7 +132,9 @@ $optParams = array(
   'timeMin' => date('c'),
 );
 $c=0;
-error_reporting(0);
+error_reporting(0);	// Show no errors
+//error_reporting(E_ALL); // Show all errors
+
 $filedata[noofcals]=3;
 $filedata[cals]=$calArray;
 foreach ($calArray as $calendar) {
@@ -119,6 +148,7 @@ foreach ($calArray as $calendar) {
 //print_r ($filedata);
 // Sort all events in date order (According to timestamps)
 asort($allevents);
+//print_r("Encode");
 echo json_encode($allevents);
 //echo("<br><br>");
 //echo json_encode($filedata);

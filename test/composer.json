@@ -1,0 +1,16 @@
+{
+  "require":
+  {
+    "phpclasses/callback_timers": ">=0.5"
+  },
+  "repositories":
+  [
+    {
+      "type": "composer",
+      "url": "https:\/\/www.phpclasses.org\/"
+    },
+    {
+      "packagist": false
+    }
+  ]
+}

@@ -33,7 +33,7 @@
 		var washerOn=0;	// For checking washer power.
 		var washerStatus=0;
 		var washerOff=0;
-    var pressure=0;
+		var pressure=0;
 
 		// For calendar events
 		var event;
@@ -56,15 +56,29 @@
 
 			// Set timeout for get request
 			$.ajaxSetup({
-				timeout:10000 // in milliseconds
+				error : function(xhr, status, error) {
+					//alert("An AJAX error occured: " + status + "\nError: " + error);
+					console.log("Ajax error: " + error);
+				},
+				timeout:40000 // in milliseconds
 			});
 
 /* Load picture */
 			// Call php script to fetch a random image
-			console.log("Get pic");
-			$.get( "pics.php", function( data ) {
-  			//console.log( "Data Loaded: " + data );
-  			var mydata = $.parseJSON(data);
+			console.log("JS - Call pics.php");
+			try {
+				$.get( "pics.php", function( data ) {
+				//console.log( "Data Loaded: " + data );
+				try {
+					var mydata = $.parseJSON(data);
+				} catch (e) {
+					console.log("Something went wrong");
+				}
+				if (typeof mydata === "undefined") {
+					console.log( "Mydata undefined");
+					
+				}
+				else {
 				var path = mydata.path;
 				var filename = mydata.filename;
 				var filedate = mydata.date;
@@ -76,14 +90,14 @@
 				var windspeed;
 				var winddir;
 				var winddirtext;
-				var d = new Date();
+				d = new Date();
 				var n = d.getTime();
 
 				console.log( "Data Loaded: " + filename +"-"+ rotation);
 				console.log("time2: " + n);
 
 				// Set image in image div to the fetched image
-        $("#photodiv").html("<img id='img' src='"+path+"/"+filename+"'>");
+				$("#photodiv").html("<img id='img' src='"+path+"/"+filename+"'>");
 				var imgObj=document.getElementById("img");
 				console.log( "Data Loaded: " + filename +"-"+ ratio);
 
@@ -141,181 +155,89 @@
 					//console.log("ratio<1");
 				}
 				// Set the photoinfo div's content to the image date and time
-				$("#photoinfo").html(filedate + " (" + rotation+")");
+				//$("#photoinfo").html(filedate + " (" + rotation+")");
+				$("#photoinfo").html(filedate);
 				// Resize info div size
 				var infodivsize = window.getComputedStyle(document.getElementById('photoinfo')).width;
 				var photodiv=document.getElementById("photoinfo");
 				photodiv.width=infodivsize;
-
+				
+				
+			}
 				setTimeout(getData, interval)
+				
 			});
+			}
+			catch(err){
+				alert("an error occured");
+			}
 
-/* Emoncms */
-			// Call php script to get data from Emoncms.org
-			console.log("Get Emoncms values");
-			$.get( "emoncms.php", function( data ) {
-				console.log( "Data Loaded from Emoncms: " + data );
-				var mydata = $.parseJSON(data);
-				//var outdoortemp = mydata.outdoortemp;
-				pressure = mydata.pressure;
-				//var washertemp = mydata.washertemp;
-				//var washerhum = mydata.washerhum;
-				var timenow = mydata.timenow;
+			// Add to counter
+			smhicheck++;
+			console.log("counter: " + smhicheck);
+			$("#bottom").html(bottomhtml);
+			$("#bottom2").html(bottom2html);
+			
+			// Time
+			var dateWithouthSecond = new Date();
+			var hourmin = dateWithouthSecond.toLocaleTimeString(navigator.language, {hour: '2-digit', minute:'2-digit'});
+			console.log(hourmin);
+			$("#irow1").html(hourmin);
 
-				// Show fetched data
-				//$("#info").html("Klockan ?r:<br>" + timenow + " <br>Temperatur: "+ outdoortemp);
-				$("#irow1").html(timenow );
-				//$("#irow2").html("Ute: "+ outdoortemp + "C");
-				//$("#irow4").html("Tv?ttstuga: " + washertemp + "C, " + washerhum + "%");
-				//$("#irow3").html("Lufttryck: "+pressure + "hPa");
-                                //$("#irow3").html(pressure + "hPa");
-
-				// Resize info div size
-				//window.getComputedStyle(document.getElementById('your-element')).width;
+			var yrhtml;
+			var sunstate;
+			
+			$.get( "sunstate.php", function( data ) {
+				sunstate = data;
+				console.log("Sun state: " + sunstate);
 			});
-
-/* Weather station */
-        $.get( "weatherstation.php", function( data ) {
-				console.log( "Data Loaded from weatherstation: " + data );
-                                var mydata = $.parseJSON(data);
-				var windspeed = mydata.windspeed;
-				var moist = mydata.moist;
-				var winddir = mydata.winddir;
-				var outdoortemp = mydata.temp;
-
-				// Convert temp
-				outdoortemp = outdoortemp * 10;
-				outdoortemp = Math.round(outdoortemp)/10;
-
-				// Convert winddir
-				if (winddir >= 338 || winddir < 25) {
-					winddirtext = "N";
+			
+			$.get( "yr.php", function( data ) {
+				var yrimg;
+				console.log("YR Data: " + data);
+				// https://api.met.no/weatherapi/weathericon/1.1/?symbol=1;content_type=image/png
+				if (data<10) {
+					yrimg = "yr-weather-symbols/png/48/0";
+				} 
+				else {
+					yrimg = "yr-weather-symbols/png/48/";
 				}
-				else if (winddir >= 25 || winddir < 68) {
-					winddirtext = "NE";
-				}
-				else if (winddir >= 68 || winddir < 112) {
-					winddirtext = "E";
-				}
-				else if (winddir >= 112 || winddir < 158) {
-					winddirtext = "SE";
-				}
-				else if (winddir >= 158 || winddir < 202) {
-					winddirtext = "S";
-				}
-				else if (winddir >= 202 || winddir < 248) {
-					winddirtext = "SW";
-				}
-				else if (winddir >= 248||winddir < 292) {
-					winddirtext = "W";
-				}
-				else if (winddir >= 292 || winddir < 338) {
-					winddirtext = "NW";
+				// Use different pictures for day and night
+				if (sunstate="above_horizon") {
+					yrimg = yrimg + data +  "d.png";
 				}
 				else {
-					winddirtext = "Err";
+					yrimg = yrimg + data +  "n.png";					
 				}
-				$("#irow2").html("Ute: "+ outdoortemp + "C");
-				$("#irowWind").html(windspeed + "m/s, " + winddirtext);
-        $("#irowMoist").html(moist + "% ");
-        $("#irow3").html(pressure + "hPa " + moist + "%") ;
-      });
-
-/* Washer room info */
-			$.get( "washerdata.php", function( data ) {
-			var mydata = $.parseJSON(data);
-			var washertemp = mydata.temp;
-			var washerhum = mydata.humidity;
-			var washerpower = mydata.power;
-      var washerstate = mydata.state;
-
-			// Round temp value
-			washertemp = washertemp * 10;
-			washertemp = (Math.round(washertemp))/10;
-			//washertemp = washertemp-3	// Adjust value, meter reads to high
-			console.log( "Data Loaded from Washer server: " + washertemp +"-" + washerhum +"-" + washerpower );
-
-			//console.log("washerpowerint: " + washerpowerint);
-			if (washerpower>10 && washerStatus==0) {    // Status = off and it uses power
-				washerStatus=1;                     // Set status = 1
-				console.log("Washer started");
-			}
-
-			if (washerpower>10 && washerStatus==1) {    // It uses power and status = 1
-          washerOff=0;
-          washerOn++;
-          console.log("Reset washerOff");
-			}
-			if (washerpower<10 && washerStatus==1) {
-  				washerOn++;  // Add to run counter
-          washerOff++;
-          console.log("Washer is idle. washerOff=" + washerOff);
-			}
-			if(washerOff>10) {
-				console.log("Washer stopped");
-				washerStatus = 0;
-				washerOn=0;
-				washerOff=0;
-			}
-			var washerText;
-			var washerOnTime;
-			if(washerStatus==1) {
-        washerText="running"
-        var washerOnSec = washerOn * 30; // 30 seconds between runs. This gets the on time in seconds.
-        var date = new Date(null);
-        date.setSeconds(washerOnSec); // specify value for SECONDS here
-        washerOnTime = date.toISOString().substr(11, 5);
-        washerOnTime = "K?rtid: " + washerOnTime;
-      }
-      else {
-        washerText="av";
-        washerOnTime="";
-      }
-
-			$("#irow4").html("Tv?ttstuga:<br>Temp: " + washertemp + "C.<br>Fuktighet: " + washerhum + "%<br>" + washerpower + "W<br>Tv?ttmaskinen ?r "+washerText +"<br>"+washerOnTime);
+				console.log("YR img: " + yrimg);
+				yrhtml = "<img src='" + yrimg + "'>";
+				console.log("YR img file: " + yrhtml);
 			});
-/* Load weather data from Smhi. Use a counter, dont retrieve data on every picture change */
 
-			//console.log("smhicheck:"+smhicheck);
-			if (smhicheck>smhiinterval || smhicheck==0) {
-				console.log("Get Smhi data");
-				$.get( "smhidata.php", function( data ) {
-					console.log( "Data Loaded from Smhi: " + data );
+			// Outdoor temp
+			$.get( "outdoortemp.php", function( data ) {
+				$("#irow2").html(data+"C " + yrhtml);
+			});
 
-					var mydata = $.parseJSON(data);
-					windspeed=mydata.windspeed;
-					winddir=mydata.winddir;
-					rain=mydata.rain;
-					wnowtext = mydata.wnowtext;
-					moist = mydata.moist;
+			gcal();
+		}
+		
 
-					if (winddir < 45 || winddir > 315) {
-						winddirtext = "nordlig";
-					}
-					else if (winddir > 45 || winddir > 135) {
-						winddirtext = "?stlig";
-					}
-					else if (winddir <= 135||winddir >= 225) {
-						winddirtext = "sydlig";
-					}
-					else if (winddir < 225 || winddir > 315) {
-						winddirtext = "v?stlig";
-					}
-					// Add data to bottom div
-					bottomhtml = "Vind: " + windspeed + " m/s "+ winddirtext + ". Regn:  " + rain +". " + wnowtext;
-					console.log("bottom: " + bottomhtml);
-					// Add moist value to right panel
-					//$("#irowMoist").html("Luftfuktighet: " + moist + "% ")
+		setTimeout(getData, interval)
+	});
 
-				});
-				smhicheck=0;
 
+
+function gcal() {
 // Get data from Google Calendar */
 				console.log("Get calendar data");
+				$("#irow5").html("Wait...");
+			try {
 				$.get( "googleCal.php", function( data ) {
-				//console.log( "Data Loaded from Google Calendar: " + data );
+				console.log( "Data Loaded from Google Calendar: " + data );
 				var mydata = $.parseJSON(data);
 				var inforowdata="";
+				var urgentdata="";
 
 				Object.keys(mydata).forEach(function(key,index) {
 				// Runs one time per event found
@@ -330,13 +252,18 @@
 					var endtime = new Date($event["end"]);
 					var event = $event["event"];
 					var weekday = $event["day"];
+					var timerightnow = new Date(Date.now());
+					var tsnow = timerightnow.getTime();
+					console.log("tsnow: " + tsnow);
 					// Get and adjust values
+					var timestamp = starttime.getTime();
 					starthour = ("0" + (starttime.getHours())).slice(-2); // Leading zero
 					startmin = ("0" + (starttime.getMinutes())).slice(-2); // Leading zero
 					startHM = starthour + ":" + startmin;
 					startMonth = starttime.getMonth()+1;	// getMonth gives number from 0-11
 					startMonth = ("0" + (startMonth)).slice(-2); // Leading zero
-					startdate = starttime.getFullYear()+"-"+startMonth+"-"+starttime.getDate();
+					startDay = ("0" + (starttime.getDate())).slice(-2); // Leading zero
+					startdate = starttime.getFullYear()+"-"+startMonth+"-"+startDay;
 					endhour = ("0" + (endtime.getHours())).slice(-2); // Leading zero
 					endmin = ("0" + (endtime.getMinutes())).slice(-2); // Leading zero
 					endHM = endhour + ":" + endmin;
@@ -346,53 +273,57 @@
 					startdate + " " + startHM + "-" + endHM +
 					"</span>" +
 					"<br>" + event + "<br>-------------------<br>";
+					// Add data to urgent panel
+					if (urgentdata.length == 0) {
+						// timestamp = event start time in millis
+						// tsnow = time now in millis
+						// timestamp = event start time in millis
+						// tsnow = time now in millis
+						// time to event:
+						var tleft = timestamp - tsnow;
+						console.log(tsnow + " " + timestamp + " " + thours + "tleft: " + tleft);
 
+						// 24h = 86400000mS
+						// Check if there is less than 24 hours less to the event
+						var thours = parseInt((tleft/(1000*60*60))%24);  // Hours left to the event
+
+						if (tleft < 86400000) {	// It's less than 24 hours left
+							urgentdata = "Om " + thours + " timmar: " + event;
+							$("#urgent").show();
+						}
+						else {
+							urgentdata = "";
+							$("#urgent").hide();
+						}
+					}
 				});
+				console.log("Inforowdata: ");
 				console.log(inforowdata);
 				// Infodivs to the right
 				$("#irow5").html(inforowdata);
-				});
-
-// Weather forecast */
-				console.log("Get forecast data");
-				$.get( "forecast.php", function( data ) {
-					//console.log( "Forecast loaded: " + data );
-					var mydata = $.parseJSON(data);
-					console.log( "Forecast loaded: " + mydata );
-					// Loop through array
-					bottom2html = "--- ";
-					Object.keys(mydata).forEach(function(key,index) {
-						//console.log(key);
-						var ctime = mydata[key]["ctime"];
-						var t = mydata[key]["t"];
-						var wd = mydata[key]["wd"];
-						var ws = mydata[key]["ws"];
-						var wtype = mydata[key]["wtype"];
-						// Add data to second bottom div
-						bottom2html = bottom2html + "kl: " + ctime + ".00: " + t + "C, " + wtype + " --- ";
-					});
+				//urgent
+				$("#urgent").html(urgentdata);
 				});
 			}
+			catch(err){
+				alert("an error occured");
+			}
 
-			// Add to counter
-			smhicheck++;
-			$("#bottom").html(bottomhtml);
-			$("#bottom2").html(bottom2html);
+}
 
-		}
-		setTimeout(getData, interval)
-	});
+      
       </script>
    </head>
    <body>
 	<div id="container">
 		<div id="photoinfo"></div>
+		<div id="urgent">Urgent!</div>
 		<div id="info">
 			<div id="irow1"></div>
 			<div id="irow2"></div>
 			<div id="irow3"></div>
 			<!--<div id="irowMoist"></div>-->
-      <div id="irowWind"></div>
+			<div id="irowWind"></div>
 			<!--<div id="emptyrow">&nbsp</div>-->
 			<div id="irow4"></div>
 			<!--<div id="emptyrow">&nbsp</div>-->
